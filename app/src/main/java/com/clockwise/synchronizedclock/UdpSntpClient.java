@@ -1,8 +1,11 @@
 package com.clockwise.synchronizedclock;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 public class UdpSntpClient {
 
@@ -13,7 +16,7 @@ public class UdpSntpClient {
     private static final int NtpPort = 123;
 
     // Define fetchNtp, a method for fetching NTP-Time
-    public long fetchNtp(){
+    public long fetchNtp() throws IOException {
         byte[] ntpRequest = new byte[48];
         ntpRequest[0] = 0x1B;
             //00011011 = 0x1B
@@ -24,16 +27,27 @@ public class UdpSntpClient {
 
         // Using try-with-resources for DatagramSocket, which auto-closes due to AutoCloseable.
         try(DatagramSocket socket = new DatagramSocket()){
-           //fill with UDP logic here
 
+            InetAddress address = InetAddress.getByName(NtpHost);
 
+            //DatagramPacket(byte[] buf, int length, InetAddress address, int port)
+            DatagramPacket packet = new DatagramPacket(ntpRequest, ntpRequest.length,address,NtpPort);
+
+            // send request
+            socket.send(packet);
+
+            //receive response
+            //DatagramPacket(byte[] buf, int length)
+            DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+
+            socket.receive(response);
 
 
             //Catch Socket Exeptions
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
-        //Return 0 just as a placeholder, it should return the time
         return 0;
     }
+
 }
