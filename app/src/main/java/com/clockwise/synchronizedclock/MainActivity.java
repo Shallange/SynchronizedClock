@@ -1,6 +1,11 @@
 package com.clockwise.synchronizedclock;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,8 +13,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextClock;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /*
 *
@@ -26,6 +33,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Set up the Constraints
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        // Set up the OneOffWorkRequest
+        PeriodicWorkRequest ntpRequest = new PeriodicWorkRequest.Builder(NtpTimeWorker.class, 1, TimeUnit.MINUTES)
+                .setConstraints(constraints)
+                .build();
+
+        // Enqueue the WorkRequest
+        WorkManager.getInstance(this).enqueue(ntpRequest);
+
 
     Button button1 = findViewById(R.id.button1);//"Click here to update time"-button
     button1.setOnClickListener(new View.OnClickListener() {
