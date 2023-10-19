@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     // Create an instance of UdpSntpClient
-                    UdpSntpClient client = new UdpSntpClient();
+                    UdpSntpService client = new UdpSntpService();
                     try {
                         Log.d("MAIN_ACTIVITY", "Fetching NTP time...");
 

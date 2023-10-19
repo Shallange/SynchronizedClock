@@ -9,7 +9,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Arrays;
 
-public class UdpSntpClient {
+public class UdpSntpService {
 
     //Define a constant for NTP server host
     private static final String NTP_HOST = "se.pool.ntp.org";
