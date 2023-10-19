@@ -1,10 +1,13 @@
 package com.clockwise.synchronizedclock;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.Arrays;
 
 public class UdpSntpClient {
 
@@ -34,6 +37,7 @@ public class UdpSntpClient {
 
             //DatagramPacket(byte[] buf, int length, InetAddress address, int port)
             DatagramPacket packet = new DatagramPacket(ntpRequest, ntpRequest.length,address,NTP_PORT);
+            Log.d("NTP_CLIENT", "Sending NTP request to: " + NTP_HOST);
 
             // send the NTP request to the server
             socket.send(packet);
@@ -43,6 +47,7 @@ public class UdpSntpClient {
             DatagramPacket response = new DatagramPacket(buffer, buffer.length);
 
             socket.receive(response);
+            Log.d("NTP_CLIENT", "Received NTP response");
 
             /* This was for me to know what each buffer contained and gave me a better understanding why we need to bit shift
             and reorder the timestamp( MSB(47) LSB(40) in the timestamp variable
@@ -56,20 +61,24 @@ public class UdpSntpClient {
             System.out.println("Buffer[40]: " + (buffer[40] & 0xFF));
             */
             // Extract the seconds from the response
-            long seconds = (buffer[43] & 0xFFL) << 24 |
-                    (buffer[42] & 0xFFL) << 16 |
-                    (buffer[41] & 0xFFL) << 8  |
-                    (buffer[40] & 0xFFL);
-            // Extract the fractional seconds from the response
-            long fraction = (buffer[47] & 0xFFL) << 24 |
-                    (buffer[46] & 0xFFL) << 16 |
-                    (buffer[45] & 0xFFL) << 8  |
-                    (buffer[44] & 0xFFL);
+            long seconds = (buffer[40] & 0xFFL) << 24 |
+                           (buffer[41] & 0xFFL) << 16 |
+                           (buffer[42] & 0xFFL) << 8  |
+                           (buffer[43] & 0xFFL);
+
+// Extract the fractional seconds from the response
+            long fraction = (buffer[44] & 0xFFL) << 24 |
+                            (buffer[45] & 0xFFL) << 16 |
+                            (buffer[46] & 0xFFL) << 8  |
+                            (buffer[47] & 0xFFL);
+            Log.d("NTP_CLIENT", "NTP Response bytes: " + Arrays.toString(buffer));
 
             //ntp-time is in seconds(January 1,1900) and this converts it to unix which is in milliseconds(January 1, 1970)
             long timestamp =(seconds - 2208988800L) * 1000L + (fraction * 1000L / 0x100000000L);
 
             //Returns the Unix timestamp
+            Log.d("NTP_CLIENT", "Extracted Unix timestamp: " + timestamp);
+
             return timestamp;
             //Catch Socket Exceptions
         } catch (SocketException e) {

@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextClock;
@@ -42,12 +43,18 @@ public class MainActivity extends AppCompatActivity {
                     // Create an instance of UdpSntpClient
                     UdpSntpClient client = new UdpSntpClient();
                     try {
+                        Log.d("MAIN_ACTIVITY", "Fetching NTP time...");
+
                         // Fetch the NTP time
                         final long ntpTime = client.fetchNtp();
+                        Log.d("MAIN_ACTIVITY", "Fetched NTP time: " + ntpTime);
+
                         // Convert the fetched time to a Date object
                         final Date date = new Date(ntpTime);
                         // Format the date to a string
                         final String formattedDate = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(date);
+                        Log.d("MAIN_ACTIVITY", "Formatted date: " + formattedDate);
+
 
                         // Update UI on the main thread using the Handler
                         mainHandler.post(new Runnable() {
