@@ -1,11 +1,6 @@
 package com.clockwise.synchronizedclock;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.work.Constraints;
-import androidx.work.NetworkType;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
-
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -16,15 +11,6 @@ import android.widget.TextClock;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
-/*
-*
-* Temporary comment, saved the system time here whilst trying implementing NTP-time below
-*  String formattedDate = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(date);
-   TextClock textClock1 = findViewById(R.id.textClock1);
-   textClock1.setText(formattedDate);
-* */
 
 public class MainActivity extends AppCompatActivity {
     private Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -34,20 +20,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Set up the Constraints
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-
-        // Set up the OneOffWorkRequest
-        PeriodicWorkRequest ntpRequest = new PeriodicWorkRequest.Builder(NtpTimeWorker.class, 1, TimeUnit.MINUTES)
-                .setConstraints(constraints)
-                .build();
-
-        // Enqueue the WorkRequest
-        WorkManager.getInstance(this).enqueue(ntpRequest);
-
-
     Button button1 = findViewById(R.id.button1);//"Click here to update time"-button
     button1.setOnClickListener(new View.OnClickListener() {
         @Override
@@ -56,7 +28,6 @@ public class MainActivity extends AppCompatActivity {
         }
     });
     }
-
     private void fetchAndDisplayNtp() {
             new Thread(new Runnable() {
                 @Override
