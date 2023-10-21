@@ -1,6 +1,10 @@
 package com.clockwise.synchronizedclock;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,6 +19,7 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
     private Handler mainHandler = new Handler(Looper.getMainLooper());
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,9 +30,23 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             fetchAndDisplayNtp();
-        }
-    });
+            }
+        });
     }
+
+    private boolean isNetworkConnected(){
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(cm == null){
+            return false;
+        }
+        Network network = cm.getActiveNetwork();
+        if(network == null){
+            return false;
+        }
+       
+        return false;
+    }
+
     private void fetchAndDisplayNtp() {
             new Thread(new Runnable() {
                 @Override
@@ -46,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
                         // Format the date to a string
                         final String formattedDate = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(date);
                         Log.d("MAIN_ACTIVITY", "Formatted date: " + formattedDate);
-
 
                         // Update UI on the main thread using the Handler
                         mainHandler.post(new Runnable() {
