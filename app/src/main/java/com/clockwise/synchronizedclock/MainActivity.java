@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -35,18 +36,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isNetworkConnected(){
+        // Get the ConnectivityManager instance to manage network connections.
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        // Check if the ConnectivityManager instance is null.
         if(cm == null){
+            Log.d("NetworkCheck", "ConnectivityManager is null");
             return false;
         }
+        // Get the currently active network.
         Network network = cm.getActiveNetwork();
+        // Check if there's an active network connection.
         if(network == null){
+            Log.d("NetworkCheck", "No active network found");
             return false;
         }
-       
-        return false;
+        // Get the capabilities of the active network.
+        NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+        // Check if the active network has Wi-Fi transport capabilities.
+        return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
     }
-
     private void fetchAndDisplayNtp() {
             new Thread(new Runnable() {
                 @Override
