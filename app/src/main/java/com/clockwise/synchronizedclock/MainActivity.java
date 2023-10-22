@@ -136,11 +136,9 @@ public class MainActivity extends AppCompatActivity {
                 UdpSntpService client = new UdpSntpService();
                 try {
                     Log.d("MAIN_ACTIVITY", "Fetching NTP time...");
-
                     // Fetch the NTP time
                     final long ntpTime = client.fetchNtp();
                     Log.d("MAIN_ACTIVITY", "Fetched NTP time: " + ntpTime);
-
                     // Convert the fetched time to a Date object
                     final Date date = new Date(ntpTime);
                     // Format the date to a string
@@ -151,16 +149,25 @@ public class MainActivity extends AppCompatActivity {
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            // Find the TextClock from the layout using its ID
-                            TextClock textClock1 = findViewById(R.id.textClock1);
                             // Set the formatted date as the text of the TextClock
                             textClock1.setText(formattedDate);
                         }
                     });
-                } catch (Exception e) {
+                }catch (Exception e) {
                     e.printStackTrace();
+                    mainHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            // Set the formatted NTP time as the text of the TextClock
+                            displaySystemTime();
+                            // Display the system time and set the indicator's background color to red
+                            indicatorView.setBackgroundColor(Color.RED);
+                        }
+                    });
+                } finally {
+                    isFetchingNTP = false;
                 }
             }
-        }).start(); // Start the thread
+        }).start();
     }
 }
