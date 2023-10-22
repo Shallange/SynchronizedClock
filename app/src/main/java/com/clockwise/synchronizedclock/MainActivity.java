@@ -31,6 +31,10 @@ public class MainActivity extends AppCompatActivity {
     private TextClock textClock1;
     // Flag to check if the app is currently fetching NTP data.
     private boolean isFetchingNTP = false;
+    // Flag to control whether the app should actively fetch NTP data or not.
+    private boolean isFetchingActive = true;
+
+
 
 
     @Override
@@ -51,12 +55,15 @@ public class MainActivity extends AppCompatActivity {
         };
         handler.post(updateRunnable);
 
-        Button button1 = findViewById(R.id.button1);//"Click here to update time"-button
-        button1.setOnClickListener(new View.OnClickListener() {
-
+        Button pauseButton = findViewById(R.id.pauseButton);//"Click here to update time"-button
+        pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                fetchAndDisplayNtp();
+                if(isFetchingActive){
+                    pauseButton.setText("Pause Fetching");
+                    fetchAndDisplayNtp();
+                }
+                    pauseButton.setText("Resume Fetching");
             }
         });
     }
@@ -129,6 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void fetchAndDisplayNtp() {
+        if (!isFetchingActive || isFetchingNTP) return;
         new Thread(new Runnable() {
             @Override
             public void run() {
