@@ -59,11 +59,13 @@ public class MainActivity extends AppCompatActivity {
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isFetchingActive = !isFetchingActive;//toggle the flag
                 if(isFetchingActive){
                     pauseButton.setText("Pause Fetching");
                     fetchAndDisplayNtp();
-                }
+                }else {
                     pauseButton.setText("Resume Fetching");
+                }
             }
         });
     }
