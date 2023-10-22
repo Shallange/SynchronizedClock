@@ -20,31 +20,37 @@ import java.util.Date;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+/**
+ * MainActivity class responsible for displaying synchronized clock.
+ */
 public class MainActivity extends AppCompatActivity {
-    // Create an Executor to manage background tasks.
+    /** Create an Executor to manage background tasks.*/
     private final Executor executor = Executors.newSingleThreadExecutor();
-    // Handler to post tasks to the main thread.
+    /** Handler to post tasks to the main thread.*/
     private Handler mainHandler = new Handler(Looper.getMainLooper());
-    // View reference for the network status indicator.
+    /** View reference for the network status indicator.*/
     private View indicatorView;
-    // Reference for the TextClock UI element to display time.
+    /** Reference for the TextClock UI element to display time.*/
     private TextClock textClock1;
-    // Flag to check if the app is currently fetching NTP data.
+    /** Flag to check if the app is currently fetching NTP data.*/
     private boolean isFetchingNTP = false;
-    // Flag to control whether the app should actively fetch NTP data or not.
+    /** Flag to control whether the app should actively fetch NTP data or not.*/
     private boolean isFetchingActive = true;
 
-
-
-
+    /**
+     * Called when the activity is first created.
+     * @param savedInstanceState Bundle containing activity's previous state.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // Cache the views for better performance inside onCreate().
+
+        // Initialize views
         textClock1 = findViewById(R.id.textClock1);
         indicatorView = findViewById(R.id.indicatorView);
 
+        // Handler and Runnable for periodic UI updates
         final Handler handler = new Handler(Looper.getMainLooper());
         final Runnable updateRunnable = new Runnable() {
             @Override
@@ -55,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         };
         handler.post(updateRunnable);
 
+        // Initialize and set click listener for pause button
         Button pauseButton = findViewById(R.id.pauseButton);//"Click here to update time"-button
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,15 +77,24 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Retrieves the current system time.
+     * @return Formatted system time.
+     */
     private String getSystemTime(){
         Date date=new Date(System.currentTimeMillis());
         return new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(date);
     }
+
+    /** Display the system time on the TextClock. */
     private void displaySystemTime() {
         textClock1.setText(getSystemTime());
     }
 
-
+    /**
+     * Checks for network connectivity.
+     * @return true if connected, false otherwise.
+     */
     private boolean isNetworkConnected() {
         // Get the ConnectivityManager instance to manage network connections.
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -102,7 +118,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
+    /**
+     * Updates the UI based on network connectivity.
+     * @param isConnected Indicates if the device is connected to the network.
+     */
     private void updateUI(boolean isConnected) {
         // Check if the device is connected to the network.
         if (isConnected) {
@@ -124,6 +143,8 @@ public class MainActivity extends AppCompatActivity {
             indicatorView.setBackgroundColor(Color.RED);
         }
     }
+
+    /** Updates the UI in the background. */
     private void updateUIInBackground() {
         // Execute the following code in a background thread.
         executor.execute(() -> {
@@ -136,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
+    /** Fetches the NTP time and displays it on the TextClock. */
     private void fetchAndDisplayNtp() {
         if (!isFetchingActive || isFetchingNTP) return;
         new Thread(new Runnable() {
