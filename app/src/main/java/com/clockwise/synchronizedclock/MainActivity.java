@@ -88,7 +88,9 @@ public class MainActivity extends AppCompatActivity {
         // Get the capabilities of the active network.
         NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
         // Check if the active network has Wi-Fi transport capabilities.
-        return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI));
+        return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR));
+
     }
 
 
