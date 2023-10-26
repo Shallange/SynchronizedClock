@@ -6,199 +6,148 @@ import android.content.Context;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.Network;
-import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 import android.widget.TextClock;
 
 import java.text.SimpleDateFormat;
+
 import java.util.Date;
-import java.util.concurrent.Executor;
+import java.util.Locale;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 
 /**
- * MainActivity class responsible for displaying synchronized clock.
+ * MainActivity class for the Synchronized Clock application.
  */
 public class MainActivity extends AppCompatActivity {
-    /** Create an Executor to manage background tasks.*/
-    private final Executor executor = Executors.newSingleThreadExecutor();
-    /** Handler to post tasks to the main thread.*/
-    private Handler mainHandler = new Handler(Looper.getMainLooper());
-    /** View reference for the network status indicator.*/
-    private View indicatorView;
-    /** Reference for the TextClock UI element to display time.*/
+    // Declaring UI components and other instance variables
     private TextClock textClock1;
-    /** Flag to check if the app is currently fetching NTP data.*/
-    private boolean isFetchingNTP = false;
-    /** Flag to control whether the app should actively fetch NTP data or not.*/
-    private boolean isFetchingActive = true;
+    private View indicatorView;
+    private Button pauseButton;
+    private boolean isPaused = false;
+    private long offset = 0;
+    private ConnectivityManager connectivityManager;
+    private ConnectivityManager.NetworkCallback networkCallback;
+    private boolean isConnected = false;
+    private ScheduledExecutorService scheduler;
 
     /**
-     * Called when the activity is first created.
-     * @param savedInstanceState Bundle containing activity's previous state.
+     * Called when the activity is starting.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down
+     *                           then this Bundle contains the data it most recently supplied in onSaveInstanceState(Bundle).
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // Initialize views
-        textClock1 = findViewById(R.id.textClock1);
+        // Initializing UI components
         indicatorView = findViewById(R.id.indicatorView);
+        textClock1 = findViewById(R.id.textClock1);
+        pauseButton = findViewById(R.id.pauseButton);
+        // Initializing network connectivity manager and setting up network callback
+        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+
+            /**
+             * Called when the framework connects and has declared a new network ready for use.
+             *
+             * @param network The Network object corresponding to the network that has become available.
+             */
+            @Override
+            public void onAvailable(Network network) {
+                isConnected = true;
+                runOnUiThread(() -> {
+                    pauseButton.setVisibility(View.VISIBLE);  // Show the pause button
+                    indicatorView.setBackgroundColor(Color.GREEN);
+                });
+                fetchNtpOffset();
+            }
+
+            /**
+             * Called when a network disconnects or otherwise no longer satisfies this request or callback.
+             *
+             * @param network The Network object corresponding to the network that has been lost.
+             */
+            @Override
+            public void onLost(Network network) {
+                isConnected = false;
+                offset = 0;  // Resetting the offset when there's no internet
+                runOnUiThread(() -> {
+                    pauseButton.setVisibility(View.INVISIBLE);  // Hide the pause button
+                    indicatorView.setBackgroundColor(Color.RED);
+                });
+            }
+        };
+
+        NetworkRequest request = new NetworkRequest.Builder().build();
+        connectivityManager.registerNetworkCallback(request, networkCallback);
+        // Schedule NTP offset fetching every 10 minutes
+        scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(this::fetchNtpOffset, 0, 10, TimeUnit.MINUTES);
 
         // Handler and Runnable for periodic UI updates
         final Handler handler = new Handler(Looper.getMainLooper());
         final Runnable updateRunnable = new Runnable() {
             @Override
             public void run() {
-                updateUIInBackground();
-                handler.postDelayed(this, 5000);
+                long now = System.currentTimeMillis() + offset;
+                Date date = new Date(now);
+                SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", new Locale("sv", "SE"));
+                textClock1.setText(sdf.format(date));
+
+                handler.postDelayed(this, 1000);
             }
         };
         handler.post(updateRunnable);
 
         // Initialize and set click listener for pause button
-        Button pauseButton = findViewById(R.id.pauseButton);//"Click here to update time"-button
-        pauseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                isFetchingActive = !isFetchingActive;//toggle the flag
-                if(isFetchingActive){
-                    pauseButton.setText("Pause Fetching");
-                    fetchAndDisplayNtp();
-                }else {
-                    pauseButton.setText("Resume Fetching");
-                }
+        Button pauseButton = findViewById(R.id.pauseButton);
+        pauseButton.setOnClickListener(v -> {
+            isPaused = !isPaused;// Toggle the paused flag
+            if (!isPaused) {
+                fetchNtpOffset();
+                pauseButton.setText("Pause Fetching");
+                Toast.makeText(MainActivity.this, "Fetching Resumed", Toast.LENGTH_SHORT).show();
+            } else {
+                pauseButton.setText("Resume Fetching");
+                Toast.makeText(MainActivity.this, "Fetching Paused", Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    /**
-     * Retrieves the current system time.
-     * @return Formatted system time.
-     */
-    private String getSystemTime(){
-        Date date=new Date(System.currentTimeMillis());
-        return new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(date);
-    }
-
-    /** Display the system time on the TextClock. */
-    private void displaySystemTime() {
-        textClock1.setText(getSystemTime());
-    }
-
-    /**
-     * Checks for network connectivity.
-     * @return true if connected, false otherwise.
-     */
-    private boolean isNetworkConnected() {
-        // Get the ConnectivityManager instance to manage network connections.
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        // Check if the ConnectivityManager instance is null.
-        if (cm == null) {
-            Log.d("NetworkCheck", "ConnectivityManager is null");
-            return false;
-        }
-        // Get the currently active network.
-        Network network = cm.getActiveNetwork();
-        // Check if there's an active network connection.
-        if (network == null) {
-            Log.d("NetworkCheck", "No active network found");
-            return false;
-        }
-        // Get the capabilities of the active network.
-        NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
-        // Check if the active network has Wi-Fi transport capabilities.
-        return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR));
 
     }
 
     /**
-     * Updates the UI based on network connectivity.
-     * @param isConnected Indicates if the device is connected to the network.
+     * Fetches the NTP offset from the NTP server.
      */
-    private void updateUI(boolean isConnected) {
-        // Check if the device is connected to the network.
-        if (isConnected) {
-            if (!isFetchingNTP) {
-                try {
-                    // Check if the device is connected to the network.
-                    fetchAndDisplayNtp();
-                    // Set the indicator view's background color to green to indicate a successful fetch.
-                    indicatorView.setBackgroundColor(Color.GREEN);
-                } catch (Exception e) {
-                    // If there's an error in fetching the NTP time, set the indicator view's background color to red.
-                    indicatorView.setBackgroundColor(Color.RED);
-                }
-            }
-        } else {
-            // If the device is not connected to the network, display the system time.
-            displaySystemTime();
-            // Set the indicator view's background color to red to indicate no network connection.
-            indicatorView.setBackgroundColor(Color.RED);
-        }
-    }
-
-    /** Updates the UI in the background. */
-    private void updateUIInBackground() {
-        // Execute the following code in a background thread.
-        executor.execute(() -> {
-            // Check if the device is connected to the network.
-            boolean isConnected = isNetworkConnected();
-            // Post the result to the main thread to update the UI.
-            mainHandler.post(() -> {
-                updateUI(isConnected);
-            });
-        });
-    }
-
-    /** Fetches the NTP time and displays it on the TextClock. */
-    private void fetchAndDisplayNtp() {
-        if (!isFetchingActive || isFetchingNTP) return;
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // Create an instance of UdpSntpClient
-                UdpSntpService client = new UdpSntpService();
-                try {
-                    Log.d("MAIN_ACTIVITY", "Fetching NTP time...");
-                    // Fetch the NTP time
-                    final long ntpTime = client.fetchNtp();
-                    Log.d("MAIN_ACTIVITY", "Fetched NTP time: " + ntpTime);
-                    // Convert the fetched time to a Date object
-                    final Date date = new Date(ntpTime);
-                    // Format the date to a string
-                    final String formattedDate = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(date);
-                    Log.d("MAIN_ACTIVITY", "Formatted date: " + formattedDate);
-
-                    // Update UI on the main thread using the Handler
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            // Set the formatted date as the text of the TextClock
-                            textClock1.setText(formattedDate);
-                        }
-                    });
-                }catch (Exception e) {
-                    e.printStackTrace();
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            // Set the formatted NTP time as the text of the TextClock
-                            displaySystemTime();
-                            // Display the system time and set the indicator's background color to red
-                            indicatorView.setBackgroundColor(Color.RED);
-                        }
-                    });
-                } finally {
-                    isFetchingNTP = false;
-                }
+    private void fetchNtpOffset() {
+        // If not connected or paused, return without fetching
+        if (!isConnected || isPaused) return;
+        new Thread(() -> {// Start a new thread to fetch the NTP offset
+            UdpSntpService client = new UdpSntpService();
+            try {
+                offset = client.fetchNtp();// Fetch the offset using the UdpSntpService
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }).start();
+    }
+
+    /**
+     * Called before the activity is destroyed.
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        scheduler.shutdown();
+        connectivityManager.unregisterNetworkCallback(networkCallback);
     }
 }
