@@ -14,11 +14,11 @@ The app has two primary visual states:
 
 ### Fetching State
 In this state, the app is actively communicating with the NTP server to retrieve the current time. This ensures that the time displayed is accurate and up-to-date.
-![Application Fetching](images/application_systemtime_with_ntp.png)
+<img src="images/application_systemtime_with_ntp.png" alt="Application Fetching" width="300"/>
 
 ### Not-Fetching State
 In this state, the app is not communicating with the NTP server. This might be due to a variety of reasons, such as lack of internet connectivity or the app being in a dormant state.
-![Application Not Fetching](images/application_no_internet_with_0_offset.png)
+<img src="images/application_no_internet_with_0_offset.png" alt="Application Not Fetching" width="300"/>
 
 ## Code Overview
 
