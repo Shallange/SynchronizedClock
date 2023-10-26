@@ -1,6 +1,5 @@
 package com.clockwise.synchronizedclock;
 
-import android.util.Log;
 import android.util.Pair;
 
 import java.io.IOException;
@@ -8,7 +7,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.util.Arrays;
 
 /**
  * Service class responsible for fetching NTP time using UDP.
@@ -59,7 +57,6 @@ public class UdpSntpService {
                         (b7 & 0xFFL);
         //ntp-time is in seconds(January 1,1900) and this converts it to unix which is in milliseconds(January 1, 1970)
         long timestamp =(seconds - 2208988800L) * 1000L + (fraction * 1000L / 0x100000000L);
-        Log.d("ResponsebufferClass", "responseBuffer: " + timestamp );
         return timestamp;
     }
 
@@ -81,8 +78,6 @@ public class UdpSntpService {
         long currentUnixTimeMillis = System.currentTimeMillis();
         long ntpSeconds = (currentUnixTimeMillis / 1000L) + 2208988800L; // Convert UNIX epoch to NTP epoch
         long ntpFraction = ((currentUnixTimeMillis % 1000L) * 0x100000000L) / 1000L;
-        Log.d("SECONDS", "prepareNtpRequest: "+ntpSeconds);
-        Log.d("NTPFRACTION", "prepareNtpRequest: "+ntpFraction);
         // Populate the Originate Timestamp (bytes 24-31) of the request
         ntpRequest[24] = (byte) (ntpSeconds << 24);
         ntpRequest[25] = (byte) (ntpSeconds << 16);
@@ -93,7 +88,6 @@ public class UdpSntpService {
         ntpRequest[29] = (byte) (ntpFraction << 16);
         ntpRequest[30] = (byte) (ntpFraction << 8);
         ntpRequest[31] = (byte) (ntpFraction);
-        Log.d("ntprequest", "prepareNtpRequest: "+ ntpRequest);
         return new Pair<>(ntpRequest, currentUnixTimeMillis);
     }
 
@@ -109,7 +103,6 @@ public class UdpSntpService {
         Pair<byte[], Long> preparedData = prepareNtpRequest();
         byte[] ntpRequest = preparedData.first;
         long t1 = preparedData.second;
-        Log.d("t1", "fetchNtp: " + t1);
         // Create a byte array to store the server's response
         byte[] buffer = new byte[48];
 
@@ -120,7 +113,6 @@ public class UdpSntpService {
 
             //DatagramPacket(byte[] buf, int length, InetAddress address, int port)
             DatagramPacket packet = new DatagramPacket(ntpRequest, ntpRequest.length,address,NTP_PORT);
-            Log.d("NTP_CLIENT", "Sending NTP request to: " + NTP_HOST);
 
             // send the NTP request to the server
             socket.send(packet);
@@ -130,22 +122,13 @@ public class UdpSntpService {
             DatagramPacket response = new DatagramPacket(buffer, buffer.length);
 
             socket.receive(response);
-            Log.d("NTP_CLIENT", "Received NTP response");
-
 
             long t2 = responseBuffer(buffer,T2_START_BUFF);
-            Log.d("T2", "fetchNtp: "+ t2);
             long t3 = responseBuffer(buffer,T3_START_BUFF);
-            Log.d("T3", "fetchNtp: "+ t3);
             long t4 = responseBuffer(buffer,T4_START_BUFF);
-            Log.d("T4", "fetchNtp: "+ t4);
-
             long offset = ((t2 - t1) + (t3 - t4));
-            Log.d("Offset", "Offset: " + offset);
-            Log.d("NTP_CLIENT", "NTP Response bytes: " + Arrays.toString(buffer));
 
             return offset;
-
             //Catch Socket Exceptions
         } catch (SocketException e) {
             //rethrow the exception as a RuntimeException
