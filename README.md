@@ -13,12 +13,19 @@ The SynchronizedClock project is a native Android application designed to accura
 The app has two primary visual states:
 
 ### Fetching State
-In this state, the app is actively communicating with the NTP server to retrieve the current time. This ensures that the time displayed is accurate and up-to-date.
-<img src="images/application_systemtime_with_ntp.png" alt="Application Fetching" width="300"/>
+<div>
+    <p>In this state, the app is actively communicating with the NTP server to retrieve the current time. This ensures that the time displayed is accurate and up-to-date.</p>
+    <img src="images/application_systemtime_with_ntp.png" alt="Application Fetching" width="300" align="left"/>
+    <br clear="both"/>
+</div>
 
 ### Not-Fetching State
-In this state, the app is not communicating with the NTP server. This might be due to a variety of reasons, such as lack of internet connectivity or the app being in a dormant state.
-<img src="images/application_no_internet_with_0_offset.png" alt="Application Not Fetching" width="300"/>
+<div>
+    <p>In this state, the app is not communicating with the NTP server. This might be due to a variety of reasons, such as lack of internet connectivity or the app being in a dormant state.</p>
+    <img src="images/application_no_internet_with_0_offset.png" alt="Application Not Fetching" width="300" align="left"/>
+    <br clear="both"/>
+</div>
+
 
 ## Code Overview
 
