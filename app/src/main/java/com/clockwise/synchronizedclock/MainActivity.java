@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private long offset = 0;
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
-    private boolean isConnected = false;
+    private boolean isConnected = true;
     private ScheduledExecutorService scheduler;
 
     /**
