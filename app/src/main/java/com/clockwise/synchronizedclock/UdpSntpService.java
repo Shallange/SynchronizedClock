@@ -14,7 +14,7 @@ import java.net.SocketException;
 public class UdpSntpService {
 
     /** Define a constant for NTP server host*/
-    private static final String NTP_HOST = "se.pool.ntp.org";
+    private static final String NTP_HOST = "sth1.ntp.se";
 
     /** Define a constant for NTP server port */
     private static final int NTP_PORT = 123;
