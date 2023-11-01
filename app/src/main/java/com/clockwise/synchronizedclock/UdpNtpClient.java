@@ -11,7 +11,7 @@ import java.net.SocketException;
 /**
  * Service class responsible for fetching NTP time using UDP.
  */
-public class UdpSntpService {
+public class UdpNtpClient {
 
     /** Define a constant for NTP server host*/
     private static final String NTP_HOST = "sth1.ntp.se";

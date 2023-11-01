@@ -130,9 +130,9 @@ public class MainActivity extends AppCompatActivity {
         // If not connected or paused, return without fetching
         if (!isConnected || isPaused) return;
         new Thread(() -> {// Start a new thread to fetch the NTP offset
-            UdpSntpService client = new UdpSntpService();
+            UdpNtpClient client = new UdpNtpClient();
             try {
-                offset = client.fetchNtp();// Fetch the offset using the UdpSntpService
+                offset = client.fetchNtp();// Fetch the offset using the UdpNtpClient
             } catch (Exception e) {
                 e.printStackTrace();
             }
