@@ -33,7 +33,7 @@ The core functionality of the app is split into two primary files:
 
 - [MainActivity.java](app/src/main/java/com/clockwise/synchronizedclock/MainActivity.java): This is the main activity and entry point of the app. It sets up the user interface, handles user interactions, and checks for network connectivity.
 
-- [UdpSntpService.java](app/src/main/java/com/clockwise/synchronizedclock/UdpSntpService.java): This service is responsible for communicating with the NTP server. It uses the UDP protocol to send and receive time synchronization packets, and parses the response to extract accurate time details.
+- [UdpNtpClient.java](app/src/main/java/com/clockwise/synchronizedclock/UdpNtpClient.java): This Client is responsible for communicating with the NTP server. It uses the UDP protocol to send and receive time synchronization packets, and parses the response to extract accurate time details.
 
 ## Permissions
 
