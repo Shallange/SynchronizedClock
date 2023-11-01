@@ -126,7 +126,7 @@ public class UdpSntpService {
             long t2 = responseBuffer(buffer,T2_START_BUFF);
             long t3 = responseBuffer(buffer,T3_START_BUFF);
             long t4 = responseBuffer(buffer,T4_START_BUFF);
-            long offset = ((t2 - t1) + (t3 - t4));
+            long offset = (t2 - t1) + (t3 - t4)/2;
 
             return offset;
             //Catch Socket Exceptions

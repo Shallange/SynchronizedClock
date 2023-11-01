@@ -23,7 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-
 /**
  * MainActivity class for the Synchronized Clock application.
  */
@@ -122,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Fetching Paused", Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 
     /**
